@@ -10,12 +10,11 @@ from tasks.driver.utils import requires_data, greedy
 # --------------- Задание 2.0 --------------- #
 
 def _cmd_example():
-    # TODO сотрите эту строку, чтобы добавить команду
+
     main.report('Команда-пример, выводит это сообщение')
 
 
 def _cmd_example_square(arg: int):
-    # TODO сотрите эту строку, чтобы добавить команду
     return arg ** 2
 
 
@@ -38,16 +37,19 @@ def _cmd_discard():
 def _cmd_read(filename: str):
     if not os.path.exists(filename):
         return main.report(f'Файл `{filename}` не существует')
-
-    # TODO реализуйте заполнение `data` данными из файла `filename`
-
+    f = open(filename,'r', encoding='utf-8')
+    text = f.readlines()
+    r = []
+    for i in text:
+        r.append(i.removesuffix('\n'))
+    data.lines = r
     main.report(f'Прочитано {len(data)} строк')
-
+    data.cursor = (0, 0)
 
 @requires_data
 def _cmd_save(filename: str):
-    # TODO реализуйте сохранение строк из `data` в файл `filename`
-
+    f = open(filename, 'w')
+    f.write('\n'.join(data.lines))
     main.report(f'Сохранено {len(data)} строк')
 
 
@@ -76,9 +78,12 @@ def _cmd_show(from_line: int, to_line: int):
     if to_line not in range(len(data)):
         return main.report('Некорректный номер конечной строки')
 
-    # TODO реализуйте вывод строк в редакторе
-
-
+    for i in range(from_line,(to_line+1)):
+        y = len(str(to_line))
+        print(f'{i :<{y}}' +':'+ str(data[i]) )
+        if i == data.y:
+            c = data.cursor[1] + len(str(to_line)) +1
+            print(f"{'':<{c}}^")
 # --------------- Задание 2.3 --------------- #
 
 @requires_data
@@ -115,14 +120,17 @@ def _cmd_move(line: int, position: int):
 
 @requires_data
 def _cmd_newline():
-    # TODO реализуйте перевод строки
+    data.lines.insert((data.y + 1), data.line[data.cursor[1]:])
+    data.line = data.line[:data.cursor[1]]
+    data.cursor = ((data.y + 1 ),0)
     pass
 
 
 @greedy
 @requires_data
 def _cmd_type_inline(insertion: str):
-    # TODO реализуйте добавление текста `insertion` в `data
+    data.line = data.line[:data.cursor[1]] + str(insertion) + data.line[data.cursor[1]:]
+    data.cursor = (data.y,len(insertion))
     pass
 
 
@@ -136,15 +144,30 @@ def _cmd_type():
 
 @requires_data
 def _cmd_backspace(count: int):
-    # TODO реализуйте удаление символов из `data` слева от курсора
+    if count > data.cursor[1]:
+        b = len(data.line[data.cursor[1]:])
+        data.line = data.line[data.cursor[1]:]
+        c = count - data.cursor[1]-1
+        data[(data.cursor[0]-1)] = data[(data.cursor[0]-1)][:-c] + data.line
+        data.cursor = (data.y-1, len(data[data.y-1])-b)
+        del data.lines[data.y + 1]
+
+    else:
+        data.line = data.line[:(data.cursor[1] - count)] + data.line[data.cursor[1]:]
+        data.cursor = (data.y, (data.cursor[1]-count))
+
+
     pass
 
 
 @greedy
 @requires_data
 def _cmd_find_inline(text: str):
-    # TODO реализуйте поиск строки `text` в `data` 
-    # (оставьте `return 'Не найдено'`, когда `text` нет в `data`)
+    m = 0
+    for i in data.lines:
+        if i.find(text) != -1:
+            return (m, i.find(text))
+        m+=1
     return 'Не найдено'
 
 
@@ -178,8 +201,15 @@ def _cmd_repeat(macro: str, times: int):
 def _cmd_execute(filename: str):
     if not os.path.exists(filename):
         return main.report(f'Файл `{filename}` не существует')
-    
-    # TODO реализуйте чтение скрипта из `filename` и добавление его команд в `pool`
+    f = open(filename,'r')
+    com = f.readlines()
+    cl = []
+    for i in com:
+        i = i.lstrip()
+        if i != '':
+            cl.append(i.removesuffix('\n'))
+    pool.put(cl)
+
 
 
 # --------------- Задание 2.* --------------- #
