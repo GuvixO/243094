@@ -12,7 +12,8 @@ from tasks.driver.utils import requires_data, greedy
 # --------------- Задание 3.1 --------------- #
 
 def _cmd_request(url: str):
-    # TODO реализуйте заполнение `data` результатом HTTP-запроса
+    text = response = requests.get(url)
+    data.lines = text.text.split('\n')
     pass
 
 
@@ -27,18 +28,20 @@ def _cmd_await_receive(port: int):
         main.report(f'Connected from {addr}')
 
         with conn:
-            # TODO реализуйте получение данных файла и сохранения его в `data`
+            dat = conn.recv(1024)
+            dat = dat.decode('UTF-8')
+            dat = dat.split('\n')
+            data.lines = dat
             conn.sendall(b'Ok')
-
+    data.cursor = (0,0)
     main.report(f'Принято {len(data)} строк')
 
 
 def _cmd_send(host: str, port: int):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
         client.connect((host, port))
-
-        # TODO реализуйте отправку данных из `data`
-
+        text = '\n'.join(data.lines)
+        client.sendall(bytes(text, 'utf-8'))
         main.report(f'Отправлено {len(data)} строк')
         response = client.recv(2).decode('utf-8')
         main.report(f'Ответ: {response}')
