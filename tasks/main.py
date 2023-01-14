@@ -1,13 +1,14 @@
 import inspect
 
 from tasks.core import main, pool
-from tasks.driver import COMMANDS
+from tasks.driver import COMMANDS# --------------- Задание 1.1 --------------- #
+import json
+with open('config.json', 'r', encoding='utf-8') as f: #открыли файл с данными
+    text = json.load(f)
 
-# --------------- Задание 1.1 --------------- #
-
-DISPLAY = ...
-DISPLAY_MARGIN = ...
-PREFIX = ...
+DISPLAY = text['display']['show']
+DISPLAY_MARGIN = text['display']['margin']
+PREFIX = text['prefix']
 
 
 if __name__ == '__main__':
